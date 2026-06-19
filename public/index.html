@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Пульс соцсетей — ИнтернетУрок | Колледж</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+
+<div class="noise-overlay" aria-hidden="true"></div>
+
+<header class="topbar">
+  <div class="topbar__brand">
+    <span class="topbar__pulse" aria-hidden="true"></span>
+    <div>
+      <h1 class="topbar__title">Пульс соцсетей</h1>
+      <p class="topbar__subtitle">ИнтернетУрок · Колледж</p>
+    </div>
+  </div>
+  <div class="topbar__meta">
+    <span class="topbar__updated" id="updated-at">обновление каждый час</span>
+    <div class="period-switch" role="group" aria-label="Период просмотра">
+      <button class="period-switch__btn" data-days="7">7 дней</button>
+      <button class="period-switch__btn is-active" data-days="30">30 дней</button>
+      <button class="period-switch__btn" data-days="90">90 дней</button>
+    </div>
+  </div>
+</header>
+
+<main class="layout">
+
+  <section class="kpi-row" id="kpi-row" aria-label="Ключевые показатели">
+    <!-- карточки подставляются скриптом -->
+  </section>
+
+  <section class="platform-grid">
+
+    <article class="platform-card platform-card--vk">
+      <header class="platform-card__head">
+        <span class="platform-card__icon" aria-hidden="true">VK</span>
+        <h2>ВКонтакте</h2>
+        <span class="platform-card__followers" id="vk-followers">—</span>
+      </header>
+      <div class="platform-card__metrics" id="vk-metrics">
+        <!-- лайки/комменты/репосты/просмотры -->
+      </div>
+    </article>
+
+    <article class="platform-card platform-card--youtube">
+      <header class="platform-card__head">
+        <span class="platform-card__icon" aria-hidden="true">YT</span>
+        <h2>YouTube</h2>
+        <span class="platform-card__followers" id="youtube-followers">—</span>
+      </header>
+      <div class="platform-card__metrics" id="youtube-metrics">
+        <!-- лайки/комменты/просмотры -->
+      </div>
+    </article>
+
+  </section>
+
+  <section class="panels-grid">
+
+    <article class="panel">
+      <header class="panel__head">
+        <h2>Динамика подписчиков</h2>
+        <p class="panel__hint">сумма по всем платформам, по дням</p>
+      </header>
+      <div class="panel__body">
+        <svg id="chart-followers" class="chart" viewBox="0 0 640 220" preserveAspectRatio="none" role="img" aria-label="График динамики подписчиков"></svg>
+      </div>
+    </article>
+
+    <article class="panel panel--table">
+      <header class="panel__head">
+        <h2>Топ публикаций</h2>
+        <p class="panel__hint">по числу лайков, текущий снимок</p>
+      </header>
+      <div class="panel__body panel__body--scroll">
+        <table class="top-table" id="top-table">
+          <thead>
+            <tr>
+              <th>Платформа</th>
+              <th>Публикация</th>
+              <th>Лайки</th>
+              <th>Комм.</th>
+              <th>Репосты</th>
+              <th>Просм.</th>
+            </tr>
+          </thead>
+          <tbody id="top-table-body">
+            <!-- подставляется скриптом -->
+          </tbody>
+        </table>
+      </div>
+    </article>
+
+  </section>
+
+  <footer class="page-footer">
+    <p>Данные обновляются автоматически раз в час. Если цифры выглядят устаревшими — проверьте, что сборщик данных запущен.</p>
+  </footer>
+
+</main>
+
+<script src="/app.js"></script>
+</body>
+</html>
