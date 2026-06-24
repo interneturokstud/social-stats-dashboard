@@ -14,7 +14,7 @@
 // Токен живёт 1 час — обновляйте по той же ссылке, когда понадобится.
 
 const APP_ID = '54643828';
-const WORKING_REDIRECT_URI = 'https://example.com'; // единственный домен, подтверждённо принятый VK
+const WORKING_REDIRECT_URI = 'https://oauth.vk.com/blank.html';
 
 function base64UrlEncode(buffer) {
   return Buffer.from(buffer)
