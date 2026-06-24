@@ -209,7 +209,7 @@ async function refreshDashboard(days) {
   try {
     const data = await loadStats(days);
     renderKpiRow(data);
-    renderPlatformCard('vk', data);
+   
     renderPlatformCard('youtube', data);
     renderChart(data);
     renderTopTable(data);
