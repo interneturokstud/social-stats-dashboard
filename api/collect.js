@@ -9,7 +9,7 @@ import { fetchYoutubeAccountMetrics, fetchYoutubePostMetrics } from '../lib/yout
 export default async function handler(req, res) {
   // Vercel Cron вызывает эту функцию автоматически. Дополнительно разрешаем
   // ручной запуск по секретному ключу через ?secret=... — удобно для проверки.
-  const isCron = req.headers['x-vercel-cron'] !== undefined;
+  const isCron = process.env.CRON_SECRET && req.headers['authorization'] === `Bearer ${process.env.CRON_SECRET}`;
   const providedSecret = req.query?.secret;
   const isManualAuthorized =
     process.env.COLLECT_SECRET && providedSecret === process.env.COLLECT_SECRET;
