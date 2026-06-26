@@ -1,15 +1,15 @@
 // api/collect.js
-// Вызывается автоматически раз в час (см. vercel.json) и вручную при необходимости.
-// Собирает текущие метрики из VK и YouTube и сохраняет их в базу данных как новый снимок.
-
+// Вызывается автоматически раз в сутки (см. vercel.json) и вручную при необходимости.
+// Собирает текущие метрики из YouTube и Instagram и сохраняет их в базу данных как новый снимок.
 import { getDb, ensureSchema } from '../lib/db.js';
-import { fetchVkAccountMetrics, fetchVkPostMetrics } from '../lib/vk.js';
 import { fetchYoutubeAccountMetrics, fetchYoutubePostMetrics } from '../lib/youtube.js';
+import { fetchInstagramAccountMetrics, fetchInstagramPostMetrics } from '../lib/instagram.js';
 
 export default async function handler(req, res) {
-  // Vercel Cron вызывает эту функцию автоматически. Дополнительно разрешаем
-  // ручной запуск по секретному ключу через ?secret=... — удобно для проверки.
-  const isCron = process.env.CRON_SECRET && req.headers['authorization'] === `Bearer ${process.env.CRON_SECRET}`;
+  // Vercel Cron вызывает эту функцию автоматически, подписывая запрос секретом CRON_SECRET.
+  // Дополнительно разрешаем ручной запуск по секретному ключу через ?secret=... — удобно для проверки.
+  const authHeader = req.headers['authorization'];
+  const isCron = process.env.CRON_SECRET && authHeader === `Bearer ${process.env.CRON_SECRET}`;
   const providedSecret = req.query?.secret;
   const isManualAuthorized =
     process.env.COLLECT_SECRET && providedSecret === process.env.COLLECT_SECRET;
@@ -21,27 +21,7 @@ export default async function handler(req, res) {
   const sql = getDb();
   await ensureSchema(sql);
 
-  const results = { vk: null, youtube: null, errors: [] };
-
-  // --- VK ---
-  try {
-    const vkAccount = await fetchVkAccountMetrics();
-    await sql`
-      INSERT INTO account_metrics (platform, followers, total_views)
-      VALUES ('vk', ${vkAccount.followers}, 0)
-    `;
-
-    const vkPosts = await fetchVkPostMetrics(30);
-    for (const post of vkPosts) {
-      await sql`
-        INSERT INTO post_metrics (platform, post_id, title, url, published_at, likes, comments, reposts, views)
-        VALUES ('vk', ${post.postId}, ${post.title}, ${post.url}, ${post.publishedAt}, ${post.likes}, ${post.comments}, ${post.reposts}, ${post.views})
-      `;
-    }
-    results.vk = { followers: vkAccount.followers, postsCollected: vkPosts.length };
-  } catch (err) {
-    results.errors.push(`VK: ${err.message}`);
-  }
+  const results = { youtube: null, instagram: null, errors: [] };
 
   // --- YouTube ---
   try {
@@ -50,7 +30,6 @@ export default async function handler(req, res) {
       INSERT INTO account_metrics (platform, followers, total_views)
       VALUES ('youtube', ${ytAccount.followers}, ${ytAccount.totalViews})
     `;
-
     const ytVideos = await fetchYoutubePostMetrics(30);
     for (const video of ytVideos) {
       await sql`
@@ -61,6 +40,25 @@ export default async function handler(req, res) {
     results.youtube = { followers: ytAccount.followers, postsCollected: ytVideos.length };
   } catch (err) {
     results.errors.push(`YouTube: ${err.message}`);
+  }
+
+  // --- Instagram ---
+  try {
+    const igAccount = await fetchInstagramAccountMetrics();
+    await sql`
+      INSERT INTO account_metrics (platform, followers, total_views)
+      VALUES ('instagram', ${igAccount.followers}, 0)
+    `;
+    const igPosts = await fetchInstagramPostMetrics(30);
+    for (const post of igPosts) {
+      await sql`
+        INSERT INTO post_metrics (platform, post_id, title, url, published_at, likes, comments, reposts, views)
+        VALUES ('instagram', ${post.postId}, ${post.title}, ${post.url}, ${post.publishedAt}, ${post.likes}, ${post.comments}, ${post.reposts}, ${post.views})
+      `;
+    }
+    results.instagram = { followers: igAccount.followers, postsCollected: igPosts.length };
+  } catch (err) {
+    results.errors.push(`Instagram: ${err.message}`);
   }
 
   const status = results.errors.length > 0 ? 207 : 200;
