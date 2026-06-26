@@ -1,6 +1,6 @@
 // app.js — загружает данные с /api/stats и отрисовывает дашборд.
 
-const PLATFORM_LABELS = { vk: 'ВКонтакте', youtube: 'YouTube' };
+const PLATFORM_LABELS = { youtube: 'YouTube', instagram: 'Instagram' };
 const numberFormatter = new Intl.NumberFormat('ru-RU');
 
 function formatNumber(value) {
@@ -32,22 +32,21 @@ async function loadStats(days) {
 function renderKpiRow(data) {
   const container = document.getElementById('kpi-row');
 
-  const vkLatest = findPlatform(data.latestAccount, 'vk');
   const ytLatest = findPlatform(data.latestAccount, 'youtube');
-  const vkStart = findPlatform(data.periodStartAccount, 'vk');
+  const igLatest = findPlatform(data.latestAccount, 'instagram');
   const ytStart = findPlatform(data.periodStartAccount, 'youtube');
+  const igStart = findPlatform(data.periodStartAccount, 'instagram');
 
-  const totalFollowersNow = (Number(vkLatest?.followers) || 0) + (Number(ytLatest?.followers) || 0);
-  const totalFollowersStart = (Number(vkStart?.followers) || 0) + (Number(ytStart?.followers) || 0);
+  const totalFollowersNow = (Number(ytLatest?.followers) || 0) + (Number(igLatest?.followers) || 0);
+  const totalFollowersStart = (Number(ytStart?.followers) || 0) + (Number(igStart?.followers) || 0);
 
-  const vkTotals = findPlatform(data.postTotals, 'vk');
   const ytTotals = findPlatform(data.postTotals, 'youtube');
-  const totalViews = (Number(vkTotals?.views) || 0) + (Number(ytTotals?.views) || 0) + (Number(ytLatest?.total_views) || 0);
-  const totalLikes = (Number(vkTotals?.likes) || 0) + (Number(ytTotals?.likes) || 0);
+  const igTotals = findPlatform(data.postTotals, 'instagram');
+  const totalViews = (Number(ytTotals?.views) || 0) + (Number(igTotals?.views) || 0) + (Number(ytLatest?.total_views) || 0);
+  const totalLikes = (Number(ytTotals?.likes) || 0) + (Number(igTotals?.likes) || 0);
   const totalEngagement =
     totalLikes +
-    (Number(vkTotals?.comments) || 0) + (Number(ytTotals?.comments) || 0) +
-    (Number(vkTotals?.reposts) || 0);
+    (Number(ytTotals?.comments) || 0) + (Number(igTotals?.comments) || 0);
 
   const followersDelta = formatDelta(totalFollowersNow, totalFollowersStart);
 
@@ -70,7 +69,7 @@ function renderKpiRow(data) {
     {
       label: 'Вовлечённость всего',
       value: formatNumber(totalEngagement),
-      delta: { text: 'лайки + комментарии + репосты', kind: 'neutral' },
+      delta: { text: 'лайки + комментарии', kind: 'neutral' },
     },
   ];
 
@@ -115,7 +114,7 @@ function renderChart(data) {
   const height = 220;
   const padding = { top: 16, right: 12, bottom: 24, left: 12 };
 
-  // Суммируем подписчиков по дням (vk + youtube), используя последнее известное
+  // Суммируем подписчиков по дням (youtube + instagram), используя последнее известное
   // значение каждой платформы на каждый день (форвард-заполнение пропусков).
   const byDay = new Map();
   for (const row of data.dailyFollowers || []) {
@@ -131,13 +130,13 @@ function renderChart(data) {
     return;
   }
 
-  let lastVk = null;
   let lastYt = null;
+  let lastIg = null;
   const totals = days.map((day) => {
     const entry = byDay.get(day);
-    if (entry.vk !== undefined) lastVk = entry.vk;
     if (entry.youtube !== undefined) lastYt = entry.youtube;
-    return (lastVk || 0) + (lastYt || 0);
+    if (entry.instagram !== undefined) lastIg = entry.instagram;
+    return (lastYt || 0) + (lastIg || 0);
   });
 
   const min = Math.min(...totals);
@@ -169,6 +168,12 @@ function renderChart(data) {
   `;
 }
 
+function platformTag(platform) {
+  if (platform === 'youtube') return 'YT';
+  if (platform === 'instagram') return 'IG';
+  return (platform || '').toUpperCase();
+}
+
 function renderTopTable(data) {
   const tbody = document.getElementById('top-table-body');
 
@@ -179,7 +184,7 @@ function renderTopTable(data) {
 
   tbody.innerHTML = data.topPosts.map((post) => `
     <tr>
-      <td><span class="top-table__platform-tag top-table__platform-tag--${post.platform}">${post.platform === 'vk' ? 'VK' : 'YT'}</span></td>
+      <td><span class="top-table__platform-tag top-table__platform-tag--${post.platform}">${platformTag(post.platform)}</span></td>
       <td>
         <a class="top-table__title" href="${post.url}" target="_blank" rel="noopener" title="${escapeHtml(post.title || '')}">
           ${escapeHtml(post.title || '(без текста)')}
@@ -187,7 +192,7 @@ function renderTopTable(data) {
       </td>
       <td class="num">${formatNumber(post.likes)}</td>
       <td class="num">${formatNumber(post.comments)}</td>
-      <td class="num">${post.platform === 'youtube' ? '—' : formatNumber(post.reposts)}</td>
+      <td class="num">${post.reposts > 0 ? formatNumber(post.reposts) : '—'}</td>
       <td class="num">${formatNumber(post.views)}</td>
     </tr>
   `).join('');
@@ -209,8 +214,8 @@ async function refreshDashboard(days) {
   try {
     const data = await loadStats(days);
     renderKpiRow(data);
-   
     renderPlatformCard('youtube', data);
+    renderPlatformCard('instagram', data);
     renderChart(data);
     renderTopTable(data);
     renderUpdatedAt(data);
